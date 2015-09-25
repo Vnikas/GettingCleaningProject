@@ -1,0 +1,211 @@
+---
+title: "CodeBook"
+
+output: html_document
+---
+
+> This is  a CodeBook that describes the variables, the data, and any transformations or work 
+> that I performed to clean up of data collected from the accelerometers from the 
+> Samsung Galaxy S smartphone. A full description is available at the site where the data was obtained:
+> <http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones>
+
+
+##Description of the experiment
+
+The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data. 
+
+The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. From each window, a vector of features was obtained by calculating variables from the time and frequency domain.
+
+---
+
+##Work performed to clean up Data 
+
+First of all data were downloaded from:
+
+<https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip>
+
+
+I then coded a script, *run_Analysis.R*, that does the following:
+
+1. Read all the relative csv files and merges the data sets that, in their original form, are separated in test and train subsets. The files (and the directories) that I used were: 
+      1. UCI HAR Dataset/test/X_test.txt and  
+      2. UCI HAR Dataset/train/X_train.txt
+      for the measurements.
+      3. UCI HAR Dataset/activity_labels.txt
+      for mapping activity codes to activity descriptions.
+      4. UCI HAR Dataset/test/y_test.txt and
+      5. UCI HAR Dataset/train/y_train.txt
+      for the activities.
+      6. UCI HAR Dataset/test/subject_test.txt and
+      7. UCI HAR Dataset/train/subject_train.txt
+      for the subjects.
+      8. UCI HAR Dataset/features.txt for the feature names.
+ 
+      
+2. Extracts only the measurements on the mean and standard deviation for each measurement. In order to find the above  measurements I first used the **grep** function at the features names to find only those that contained the string "mean" or "std". Then I took the subset of the total dataset with only the appropriate features.
+3. Merges the new dataset with activity descriptions in order to add the descriptive activity names to the dataset
+4. Renames the dataset variables using syntactically valid names.
+5. Creates a new dataset using the **aggregate** to find  the average of each variable for each activity and each subject. 
+
+---
+
+
+##Variables
+
+Here are some interesting information about the Features (obtained by the featured_info file):
+
+
+The features selected for this database come from the accelerometer and gyroscope 3-axial raw signals tAcc-XYZ and tGyro-XYZ. These time domain signals (prefix 't' to denote time) were captured at a constant rate of 50 Hz. Then they were filtered using a median filter and a 3rd order low pass Butterworth filter with a corner frequency of 20 Hz to remove noise. Similarly, the acceleration signal was then separated into body and gravity acceleration signals (tBodyAcc-XYZ and tGravityAcc-XYZ) using another low pass Butterworth filter with a corner frequency of 0.3 Hz. 
+
+Subsequently, the body linear acceleration and angular velocity were derived in time to obtain Jerk signals (tBodyAccJerk-XYZ and tBodyGyroJerk-XYZ). Also the magnitude of these three-dimensional signals were calculated using the Euclidean norm (tBodyAccMag, tGravityAccMag, tBodyAccJerkMag, tBodyGyroMag, tBodyGyroJerkMag). 
+
+Finally a Fast Fourier Transform (FFT) was applied to some of these signals producing fBodyAcc-XYZ, fBodyAccJerk-XYZ, fBodyGyro-XYZ, fBodyAccJerkMag, fBodyGyroMag, fBodyGyroJerkMag. (Note the 'f' to indicate frequency domain signals). 
+
+These signals were used to estimate variables of the feature vector for each pattern:  
+'-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.
+
+The set of variables that were estimated from these signals are:
+
+mean(): Mean value
+
+std(): Standard deviation
+
+
+```{r, echo=FALSE}
+a <- read.csv("names.csv")
+names <- as.vector(a$x)
+
+ds <- data.frame(variable = names, description = c(rep("The",79)), stringsAsFactors=FALSE)
+
+for (i in 1:79){
+        if(grepl("std", names[i])){
+                ds$description[i] <- paste(ds$description[i],"Standard Deviation of")
+        } else {
+                ds$description[i] <- paste(ds$description[i],"Mean of")
+        }
+        if(grepl("Mag", names[i])){
+                ds$description[i] <- paste(ds$description[i],"Magnitude of")
+        }
+        if(grepl("Jerk", names[i])){
+                ds$description[i] <- paste(ds$description[i],"Jerk of")
+        }
+        
+        if(grepl("Body", names[i])){
+                ds$description[i] <- paste(ds$description[i],"Body Acceleration")
+        } else {
+                ds$description[i] <- paste(ds$description[i],"Gravity Acceleration")
+        }
+        
+        if(grepl("Acc", names[i])){
+                ds$description[i] <- paste(ds$description[i],"measured by an Accelerometer")
+        } else {
+                ds$description[i] <- paste(ds$description[i],"measured by a Gyroscope")
+        }
+        if(grepl("^t", names[i])){
+                ds$description[i] <- paste(ds$description[i],"in the time domain")
+        } else {
+                ds$description[i] <- paste(ds$description[i],"in the frequency domain")
+        }
+        if(grepl("X$", names[i])){
+                ds$description[i] <- paste(ds$description[i],"for the X direction")
+        } else if(grepl("Y$", names[i])) {
+                ds$description[i] <- paste(ds$description[i],"for the Y direction")
+        } else if(grepl("Z$", names[i])) {
+                ds$description[i] <- paste(ds$description[i],"for the Z direction")
+        }
+        
+        
+        
+        
+}
+        
+```
+###Data Dictionary
+
+All variables, except *subject* and *activity* are normalized and bounded within [-1,1] so **all features are nondimensional** (have no unit). Moreover all values of variables are averages for each activity and each subject.
+
+
+| Variable   | Description|
+|------------|------------|
+|`r ds[1,1]` |`r ds[1,2]` |
+|`r ds[2,1]` |`r ds[2,2]` |
+|`r ds[3,1]` |`r ds[3,2]` |
+|`r ds[4,1]` |`r ds[4,2]` |
+|`r ds[5,1]` |`r ds[5,2]` |
+|`r ds[6,1]` |`r ds[6,2]` |
+|`r ds[7,1]` |`r ds[7,2]` |
+|`r ds[8,1]` |`r ds[8,2]` |
+|`r ds[9,1]` |`r ds[9,2]` |
+|`r ds[10,1]` |`r ds[10,2]` |
+|`r ds[11,1]` |`r ds[11,2]` |
+|`r ds[12,1]` |`r ds[12,2]` |
+|`r ds[13,1]` |`r ds[13,2]` |
+|`r ds[14,1]` |`r ds[14,2]` |
+|`r ds[15,1]` |`r ds[15,2]` |
+|`r ds[16,1]` |`r ds[16,2]` |
+|`r ds[17,1]` |`r ds[17,2]` |
+|`r ds[18,1]` |`r ds[18,2]` |
+|`r ds[19,1]` |`r ds[19,2]` |
+|`r ds[20,1]` |`r ds[20,2]` |
+|`r ds[21,1]` |`r ds[21,2]` |
+|`r ds[22,1]` |`r ds[22,2]` |
+|`r ds[23,1]` |`r ds[23,2]` |
+|`r ds[24,1]` |`r ds[24,2]` |
+|`r ds[25,1]` |`r ds[25,2]` |
+|`r ds[26,1]` |`r ds[26,2]` |
+|`r ds[27,1]` |`r ds[27,2]` |
+|`r ds[28,1]` |`r ds[28,2]` |
+|`r ds[29,1]` |`r ds[29,2]` |
+|`r ds[30,1]` |`r ds[30,2]` |
+|`r ds[31,1]` |`r ds[31,2]` |
+|`r ds[32,1]` |`r ds[32,2]` |
+|`r ds[33,1]` |`r ds[33,2]` |
+|`r ds[34,1]` |`r ds[34,2]` |
+|`r ds[35,1]` |`r ds[35,2]` |
+|`r ds[36,1]` |`r ds[36,2]` |
+|`r ds[37,1]` |`r ds[37,2]` |
+|`r ds[38,1]` |`r ds[38,2]` |
+|`r ds[39,1]` |`r ds[39,2]` |
+|`r ds[40,1]` |`r ds[40,2]` |
+|`r ds[41,1]` |`r ds[41,2]` |
+|`r ds[42,1]` |`r ds[42,2]` |
+|`r ds[43,1]` |`r ds[43,2]` |
+|`r ds[44,1]` |`r ds[44,2]` |
+|`r ds[45,1]` |`r ds[45,2]` |
+|`r ds[46,1]` |`r ds[46,2]` |
+|`r ds[47,1]` |`r ds[47,2]` |
+|`r ds[48,1]` |`r ds[48,2]` |
+|`r ds[49,1]` |`r ds[49,2]` |
+|`r ds[50,1]` |`r ds[50,2]` |
+|`r ds[51,1]` |`r ds[51,2]` |
+|`r ds[52,1]` |`r ds[52,2]` |
+|`r ds[53,1]` |`r ds[53,2]` |
+|`r ds[54,1]` |`r ds[54,2]` |
+|`r ds[55,1]` |`r ds[55,2]` |
+|`r ds[56,1]` |`r ds[56,2]` |
+|`r ds[57,1]` |`r ds[57,2]` |
+|`r ds[58,1]` |`r ds[58,2]` |
+|`r ds[59,1]` |`r ds[59,2]` |
+|`r ds[60,1]` |`r ds[60,2]` |
+|`r ds[61,1]` |`r ds[61,2]` |
+|`r ds[62,1]` |`r ds[62,2]` |
+|`r ds[63,1]` |`r ds[63,2]` |
+|`r ds[64,1]` |`r ds[64,2]` |
+|`r ds[65,1]` |`r ds[65,2]` |
+|`r ds[66,1]` |`r ds[66,2]` |
+|`r ds[67,1]` |`r ds[67,2]` |
+|`r ds[68,1]` |`r ds[68,2]` |
+|`r ds[69,1]` |`r ds[69,2]` |
+|`r ds[70,1]` |`r ds[70,2]` |
+|`r ds[71,1]` |`r ds[71,2]` |
+|`r ds[72,1]` |`r ds[72,2]` |
+|`r ds[73,1]` |`r ds[73,2]` |
+|`r ds[74,1]` |`r ds[74,2]` |
+|`r ds[75,1]` |`r ds[75,2]` |
+|`r ds[76,1]` |`r ds[76,2]` |
+|`r ds[77,1]` |`r ds[77,2]` |
+|`r ds[78,1]` |`r ds[78,2]` |
+|`r ds[79,1]` |`r ds[79,2]` |
+|subject|The code of the volunteer that performed the activity, it is a an integer between 1 and 30.|
+|activity| Description of the activity performed. It is a string of characters (WALKING, WALKING UPSTAIRS, WALKING DOWNSTAIRS, SITTING, STANDING, LAYING)|
+
