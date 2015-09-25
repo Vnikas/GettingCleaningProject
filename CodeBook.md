@@ -1,8 +1,6 @@
----
-title: "CodeBook"
 
-output: html_document
----
+#CodeBook
+
 
 > This is  a CodeBook that describes the variables, the data, and any transformations or work 
 > that I performed to clean up of data collected from the accelerometers from the 
